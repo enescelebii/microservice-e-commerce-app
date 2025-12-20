@@ -1,0 +1,93 @@
+services:
+
+  # postgres Service
+  postgres:
+    container_name: ms_pg_sql
+    image: postgres
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+        - postgres:/var/lib/postgresql/data
+    ports:
+        - "5432:5432"
+    networks:
+      - microservices_net
+    restart: unless-stopped
+
+
+# for Standart intelij idea version
+  pgadmin:
+    container_name: ms_pg_admin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+        - "5050:80"
+    networks:
+        - microservices_net
+    restart: unless-stopped
+
+
+  # MongoDB Service
+  mongodb:
+    container_name: ms_mongo_db
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongouser
+      MONGO_INITDB_ROOT_PASSWORD: mongopassword
+    networks:
+      microservices_net:
+        aliases:
+          - mongo
+    restart: unless-stopped
+
+
+  # Mongo Express Service
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: ms_mongo_express
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    ports:
+        - "8081:8081"
+    environment:
+        ME_CONFIG_MONGODB_ADMINUSERNAME: mongouser
+        ME_CONFIG_MONGODB_ADMINPASSWORD: mongopassword
+        ME_CONFIG_MONGODB_SERVER: mongo
+    networks:
+        - microservices_net
+
+
+  # mail dev service
+  mail-dev:
+    container_name: ms_mail_dev
+    image: maildev/maildev
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+
+
+
+
+networks:
+  microservices_net:
+    driver: bridge
+
+
+
+volumes:
+  postgres:
+  pgadmin:
+  mongo:
+
