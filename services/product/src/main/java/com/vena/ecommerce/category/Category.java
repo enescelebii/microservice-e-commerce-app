@@ -1,7 +1,7 @@
 package com.vena.ecommerce.category;
 
 
-import com.vena.ecommerce.product.Product;
+import com.vena.ecommerce.product.entity.Product;
 import jakarta.persistence.*;
 import lombok.*;
 

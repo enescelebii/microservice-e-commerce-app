@@ -1,4 +1,4 @@
-package com.vena.ecommerce.product;
+package com.vena.ecommerce.product.entity;
 
 import com.vena.ecommerce.category.Category;
 import jakarta.persistence.*;
