@@ -1,6 +1,6 @@
 package com.vena.ecommerce.orderLine;
 
-import com.vena.ecommerce.entity.Order;
+import com.vena.ecommerce.order.Order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,5 +20,12 @@ public class OrderLineMapper {
                 )
                 .productId(request.productId())
                 .build();
+    }
+
+    public OrderLineResponse toOrderLineResponse(OrderLine orderLine) {
+        return new OrderLineResponse(
+                orderLine.getId(),
+                orderLine.getQuantity()
+        );
     }
 }

@@ -1,10 +1,9 @@
 package com.vena.ecommerce.orderLine;
 
 
-import com.vena.ecommerce.entity.Order;
+import com.vena.ecommerce.order.Order;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @AllArgsConstructor
 @NoArgsConstructor

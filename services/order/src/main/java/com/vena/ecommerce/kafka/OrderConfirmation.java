@@ -1,7 +1,7 @@
 package com.vena.ecommerce.kafka;
 
 import com.vena.ecommerce.customer.CustomerResponse;
-import com.vena.ecommerce.enums.PaymentMethod;
+import com.vena.ecommerce.payment.PaymentMethod;
 import com.vena.ecommerce.product.PurchaseResponse;
 
 import java.math.BigDecimal;
