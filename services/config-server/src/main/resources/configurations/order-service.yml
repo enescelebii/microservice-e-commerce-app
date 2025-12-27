@@ -1,3 +1,4 @@
+# order Service Configurations
 server:
   port: 8070
 spring:
@@ -8,16 +9,16 @@ spring:
     password: mypassword
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
   kafka:
     producer:
-        bootstrap-servers: localhost:9092
-        key-serializer: org.apache.kafka.common.serialization.StringSerializer
-        value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-        properties:
-          spring.json.add.type.mapping: orderConfirmation:com.vena.ecommerce.kafka.OrderConfirmation
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: orderConfirmation:com.vena.ecommerce.kafka.OrderConfirmation
 
 application:
   config:

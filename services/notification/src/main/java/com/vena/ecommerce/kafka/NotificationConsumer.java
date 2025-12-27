@@ -6,7 +6,6 @@ import com.vena.ecommerce.kafka.order.OrderConfirmation;
 import com.vena.ecommerce.kafka.payment.PaymentConfirmation;
 import com.vena.ecommerce.notification.Notification;
 import com.vena.ecommerce.notification.NotificationRepository;
-import com.vena.ecommerce.notification.NotificationType;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +25,7 @@ public class NotificationConsumer {
     private final NotificationRepository repository;
     private final EmailService emailService;
 
-    @KafkaListener(topics = "payment-topic")
+    @KafkaListener(topics = "payment-topic", groupId = "notification-group")
     public void consumePaymentSuccessNotification(PaymentConfirmation paymentConfirmation) throws MessagingException {
         log.info("Received payment confirmation <{}>", paymentConfirmation);
         repository.save(
@@ -45,7 +44,7 @@ public class NotificationConsumer {
         );
     }
 
-    @KafkaListener(topics = "order-topic")
+    @KafkaListener(topics = "order-topic", groupId = "notification-group")
     public void consumeOrderConfirmationNotification(OrderConfirmation orderConfirmation) throws MessagingException {
         log.info("Received order confirmation <{}>", orderConfirmation);
         repository.save(

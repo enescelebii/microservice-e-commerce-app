@@ -43,8 +43,8 @@ services:
     volumes:
       - mongo:/data/db
     environment:
-      MONGO_INITDB_ROOT_USERNAME: mongouser
-      MONGO_INITDB_ROOT_PASSWORD: mongopassword
+      MONGO_INITDB_ROOT_USERNAME: vena
+      MONGO_INITDB_ROOT_PASSWORD: vena
     networks:
       microservices_net:
         aliases:
@@ -62,14 +62,14 @@ services:
     ports:
         - "8081:8081"
     environment:
-        ME_CONFIG_MONGODB_ADMINUSERNAME: mongouser
-        ME_CONFIG_MONGODB_ADMINPASSWORD: mongopassword
+        ME_CONFIG_MONGODB_ADMINUSERNAME: vena
+        ME_CONFIG_MONGODB_ADMINPASSWORD: vena
         ME_CONFIG_MONGODB_SERVER: mongo
     networks:
         - microservices_net
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
     environment:
       # env for local purpose
@@ -82,7 +82,7 @@ services:
       - microservices_net
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.5.0
     container_name: ms_kafka
     depends_on:
       - zookeeper
@@ -91,9 +91,10 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       # local environment settings
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1

@@ -9,8 +9,10 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 
@@ -32,19 +34,25 @@ public class ProductClient {
 
     public List<PurchaseResponse> purchaseProducts(List<PurchaseRequest> requestBody){
         HttpHeaders headers = new HttpHeaders();
-        headers.set(CONTENT_TYPE, APPLICATION_JSON_VALUE);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
         HttpEntity<List<PurchaseRequest>> requestEntity = new HttpEntity<>(requestBody, headers);
 
         ParameterizedTypeReference<List<PurchaseResponse>> responseType = new ParameterizedTypeReference<>() {};
 
-        ResponseEntity<List<PurchaseResponse>> responseEntity = restTemplate.exchange(productUrl + "/purchase", POST, requestEntity, responseType);
-
-
-        if (responseEntity.getStatusCode().isError()){
-            throw new RuntimeException("Failed to purchase products" + responseEntity.getStatusCode());
+        try {
+            ResponseEntity<List<PurchaseResponse>> responseEntity = restTemplate.exchange(
+                    productUrl + "/purchase",
+                    POST,
+                    requestEntity,
+                    responseType
+            );
+            return responseEntity.getBody();
+        } catch (HttpClientErrorException.BadRequest e) {
+            throw new RuntimeException("Ürün satın alma isteği geçersiz (400 Bad Request): " + e.getResponseBodyAsString());
+        } catch (Exception e) {
+            throw new RuntimeException("Ürün satın alınırken beklenmedik bir hata oluştu: " + e.getMessage());
         }
-        return responseEntity.getBody();
     }
-
 }

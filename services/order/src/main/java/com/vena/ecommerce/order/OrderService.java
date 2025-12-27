@@ -12,6 +12,7 @@ import com.vena.ecommerce.kafka.OrderProducer;
 import com.vena.ecommerce.product.ProductClient;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +35,7 @@ public class OrderService {
     *
     * The OutBox event allows commits sent to the database to be resent even if they fail on the Kafka side. This is an important perspective for building a professional infrastructure.*/
 
-    public Integer createOrder(@Valid OrderRequest request) {
+    public Integer createOrder(@Valid @NotEmpty OrderRequest request) {
         var customer  = this.customerClient.findCustomerById(request.customerId())
                 .orElseThrow(() -> new BusinessException("Customer not found with id: " + request.customerId()));
 

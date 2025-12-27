@@ -1,3 +1,4 @@
+# Product Service Configurations
 server:
   port: 8050
 spring:

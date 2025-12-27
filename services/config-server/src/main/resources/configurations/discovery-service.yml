@@ -1,4 +1,4 @@
-# Eureka Server Configuration
+# discovery Eureka Server Configuration
 eureka:
   instance:
     hostname: localhost
