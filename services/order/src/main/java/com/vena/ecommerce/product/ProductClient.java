@@ -1,6 +1,7 @@
 package com.vena.ecommerce.product;
 
 
+import com.vena.ecommerce.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -14,10 +15,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 
 import java.util.List;
 
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -37,22 +41,31 @@ public class ProductClient {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
+
+        /* Untrusted way to forwarding token to another service
+        * It can be Done by Keycloak Clients Role Settings*/
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes != null) {
+            String token = attributes.getRequest().getHeader(AUTHORIZATION);
+            if (token != null){
+                headers.set(AUTHORIZATION, token);
+            }
+        }
+
         HttpEntity<List<PurchaseRequest>> requestEntity = new HttpEntity<>(requestBody, headers);
 
         ParameterizedTypeReference<List<PurchaseResponse>> responseType = new ParameterizedTypeReference<>() {};
 
-        try {
+
             ResponseEntity<List<PurchaseResponse>> responseEntity = restTemplate.exchange(
                     productUrl + "/purchase",
                     POST,
                     requestEntity,
                     responseType
             );
-            return responseEntity.getBody();
-        } catch (HttpClientErrorException.BadRequest e) {
-            throw new RuntimeException("Ürün satın alma isteği geçersiz (400 Bad Request): " + e.getResponseBodyAsString());
-        } catch (Exception e) {
-            throw new RuntimeException("Ürün satın alınırken beklenmedik bir hata oluştu: " + e.getMessage());
+        if (responseEntity.getStatusCode().isError()) {
+            throw new BusinessException("An error occurred while processing the products purchase: " + responseEntity.getStatusCode());
         }
+        return  responseEntity.getBody();
     }
 }
