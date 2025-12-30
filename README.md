@@ -45,6 +45,8 @@ The architecture is designed using **DDD principles**:
 
 ## 🖼️ Application Architecture Diagram
 <img width="1611" height="842" alt="micro-services drawio" src="https://github.com/user-attachments/assets/c9b9a6de-0d42-445f-ad84-575051967754" />
+<img width="1668" height="1019" alt="image" src="https://github.com/user-attachments/assets/e061882a-832c-4641-beb4-d45296863c35" />
+
 ---
 
 ## 🗂️ Mono-Repository Strategy
