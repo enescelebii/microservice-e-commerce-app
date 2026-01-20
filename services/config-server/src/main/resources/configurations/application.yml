@@ -7,6 +7,11 @@ eureka:
 
 # prevent from own yml files overriding system properties
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: "http://localhost:9099/realms/ecommerce"
   cloud:
     config:
       override.system-properties: false
@@ -15,3 +20,7 @@ management:
   tracing:
     sampling:
       probability: 1.0
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG

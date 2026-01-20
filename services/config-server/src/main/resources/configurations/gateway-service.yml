@@ -16,10 +16,14 @@ spring:
           uri: lb:http://CUSTOMER-SERVICE
           predicates:
             - Path=/api/v1/customers/**
+          filters:
+            - TokenRelay=
         - id: order-service
           uri: lb:http://ORDER-SERVICE
           predicates:
             - Path=/api/v1/orders/**
+          filters:
+            - TokenRelay=
         - id: order-lines-service
           uri: lb:http://ORDER-SERVICE
           predicates:
@@ -28,6 +32,8 @@ spring:
           uri: lb:http://PRODUCT-SERVICE
           predicates:
             - Path=/api/v1/products/**
+          filters:
+            - TokenRelay=
         - id: payment-service
           uri: lb:http://PAYMENT-SERVICE
           predicates:
