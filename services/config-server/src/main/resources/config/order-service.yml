@@ -1,0 +1,28 @@
+# order Service Configurations
+server:
+  port: 8070
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://postgres:5432/order
+    username: myuser
+    password: mypassword
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  kafka:
+    producer:
+      bootstrap-servers: kafka:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+application:
+  config:
+    customer-url: http://gateway-service:8222/api/v1/customers
+    product-url: http://gateway-service:8222/api/v1/products
+    payment-url: http://gateway-service:8222/api/v1/payments

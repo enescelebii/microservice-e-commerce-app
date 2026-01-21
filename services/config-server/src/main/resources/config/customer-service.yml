@@ -1,0 +1,13 @@
+# Customer Service Configurations
+spring:
+  data:
+    mongodb:
+      username: vena
+      password: vena
+      host: mongodb
+      port: 27017
+      database: customer
+      authentication-database: admin
+
+server:
+  port: 8090

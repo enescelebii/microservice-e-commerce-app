@@ -1,0 +1,42 @@
+# Notification Service Configurations
+spring:
+  data:
+    mongodb:
+      username: vena
+      password: vena
+      host: mongodb
+      port: 27017
+      database: customer
+      authentication-database: admin
+
+  kafka:
+    consumer:
+      bootstrap-servers: kafka:9092
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: '*'
+
+  mail:
+    host: mail-dev
+    port: 1025
+    username: vena
+    password: vena
+    properties:
+      mail:
+        smtp:
+          trust: "*"
+        auth: true
+        starttls:
+          enabled: true
+          required: true
+        connectiontimeout: 5000
+        timeout: 3000
+        writetimeout: 5000
+
+server:
+  port: 8040

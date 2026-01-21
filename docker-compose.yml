@@ -1,90 +1,83 @@
+version: "3.9"
+
 services:
 
-  # postgres Service
+  # =========================
+  # DATABASES
+  # =========================
   postgres:
     container_name: ms_pg_sql
-    image: postgres
+    image: postgres:16
     environment:
+      POSTGRES_DB: product
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
       PGDATA: /var/lib/postgresql/data
     volumes:
-        - postgres:/var/lib/postgresql/data
+      - postgres:/var/lib/postgresql/data
     ports:
-        - "5432:5432"
+      - "5432:5432"
     networks:
       - microservices_net
     restart: unless-stopped
 
-
-# for Standart intelij idea version
   pgadmin:
     container_name: ms_pg_admin
     image: dpage/pgadmin4
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin@pgadmin.org}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_DEFAULT_EMAIL: pgadmin@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: admin
     volumes:
       - pgadmin:/var/lib/pgadmin
     ports:
-        - "5050:80"
+      - "5050:80"
     networks:
-        - microservices_net
+      - microservices_net
     restart: unless-stopped
 
-
-  # MongoDB Service
   mongodb:
     container_name: ms_mongo_db
     image: mongo:7
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: vena
+      MONGO_INITDB_ROOT_PASSWORD: vena
     ports:
       - "27017:27017"
     volumes:
       - mongo:/data/db
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: vena
-      MONGO_INITDB_ROOT_PASSWORD: vena
     networks:
-      microservices_net:
-        aliases:
-          - mongo
+      - microservices_net
     restart: unless-stopped
 
-
-  # Mongo Express Service
   mongo-express:
-    image: mongo-express:1.0.2
     container_name: ms_mongo_express
-    restart: unless-stopped
+    image: mongo-express:1.0.2
     depends_on:
       - mongodb
-    ports:
-        - "8081:8081"
     environment:
-        ME_CONFIG_MONGODB_ADMINUSERNAME: vena
-        ME_CONFIG_MONGODB_ADMINPASSWORD: vena
-        ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_ADMINUSERNAME: vena
+      ME_CONFIG_MONGODB_ADMINPASSWORD: vena
+      ME_CONFIG_MONGODB_SERVER: mongodb
+    ports:
+      - "8081:8081"
     networks:
-        - microservices_net
+      - microservices_net
+    restart: unless-stopped
 
+  # =========================
+  # KAFKA
+  # =========================
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
     environment:
-      # env for local purpose
-      ZOOKEEPER_SERVER_ID: 1
       ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
     networks:
       - microservices_net
 
-  # Kafka Service
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: ms_kafka
+    container_name: kafka
     depends_on:
       - zookeeper
     ports:
@@ -93,56 +86,144 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      # local environment settings
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
     networks:
       - microservices_net
 
-
-  # mail dev service
-  mail-dev:
-    container_name: ms_mail_dev
-    image: maildev/maildev
-    ports:
-      - "1080:1080"
-      - "1025:1025"
-
-  # Zipkin Service
+  # =========================
+  # OBSERVABILITY & INFRA
+  # =========================
   zipkin:
+    image: openzipkin/zipkin
     container_name: zipkin
-    image: openzipkin/zipkin:latest
     ports:
       - "9411:9411"
     networks:
       - microservices_net
 
-  # Keycloak Service
+  mail-dev:
+    image: maildev/maildev
+    container_name: mail-dev
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+    networks:
+      - microservices_net
+
   keycloak:
-    container_name: keycloak-ms
     image: quay.io/keycloak/keycloak:24.0.1
+    container_name: keycloak
     ports:
       - "9099:8080"
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+    command: start-dev
     networks:
       - microservices_net
-    command:
-      - "start-dev"
+
+  # =========================
+  # CORE SPRING SERVICES
+  # =========================
+  config-server:
+    build: ./services/config-server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker,native
+    networks:
+      - microservices_net
+    restart: unless-stopped
+
+  discovery-service:
+    build: ./services/discovery
+    container_name: discovery-service
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+    depends_on:
+      - config-server
+    networks:
+      - microservices_net
+
+  gateway-service:
+    build: ./services/gateway
+    container_name: gateway-service
+    ports:
+      - "8222:8222"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+    depends_on:
+      - config-server
+      - discovery-service
+    networks:
+      - microservices_net
+
+  customer-service:
+    build: ./services/customer
+    container_name: customer-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+    depends_on:
+      - config-server
+      - discovery-service
+    networks:
+      - microservices_net
+
+  order-service:
+    build: ./services/order
+    container_name: order-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+    depends_on:
+      - config-server
+      - discovery-service
+    networks:
+      - microservices_net
+
+  product-service:
+    build: ./services/product
+    container_name: product-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+    depends_on:
+      - config-server
+      - discovery-service
+    networks:
+      - microservices_net
+
+  payment-service:
+    build: ./services/payment
+    container_name: payment-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+    depends_on:
+      - config-server
+      - discovery-service
+    networks:
+      - microservices_net
+
 
 networks:
   microservices_net:
     driver: bridge
 
-
-
 volumes:
   postgres:
   pgadmin:
   mongo:
-

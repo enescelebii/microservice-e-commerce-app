@@ -1,0 +1,34 @@
+#===============
+# GLOBAL CONFIG (ALL ENVIRONMENTS)
+#===============
+
+# Eureka
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://discovery-service:8761/eureka/
+
+# prevent from own yml files overriding system properties
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/ecommerce
+  cloud:
+    config:
+      override.system-properties: false
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
+  tracing:
+    sampling:
+      probability: 1.0
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
