@@ -1,8 +1,8 @@
 # E-Commerce Microservices Architecture
-**Spring Boot 3 | Spring Cloud | Kafka | Keycloak | Zipkin | MongoDB**
+**Spring Boot 3 | Spring Cloud | Kafka | Keycloak | Zipkin | MongoDB | PostgreSQL | Docker | Flyway**
 
-This repository contains a **production-grade E-Commerce Microservices system** built using modern backend architecture principles.  
-The project demonstrates real-world implementations of **DDD**, **event-driven communication**, **centralized configuration**, **security**, and **distributed tracing**.
+This repository contains a **production-grade, fully containerized E-Commerce Microservices system** built using modern backend architecture principles.  
+The project demonstrates real-world implementations of **DDD**, **event-driven communication**, **centralized configuration**, **security**, **database migrations**, and **distributed tracing**.
 
 ## 🎯 Business Requirements
 
@@ -59,14 +59,30 @@ This project uses a **mono-repo approach**:
 - Easier onboarding and maintenance
 
 ---
-
 ## ⚙️ Infrastructure & Tooling
 
-- Docker & Docker Compose
-- Apache Kafka & Zookeeper
-- MongoDB
-- Zipkin (Distributed Tracing)
-- Keycloak (Authentication & Authorization)
+- **Docker & Docker Compose:** Fully containerized environment for consistent deployment.
+- **Apache Kafka:** High-throughput event streaming.
+- **Keycloak:** Identity and Access Management (IAM).
+- **Flyway:** Robust database migration and version control.
+- **Zipkin:** Distributed Tracing and latency analysis.
+- **MailDev:** SMTP Server for testing email deliveries.
+- **Databases:** PostgreSQL (Relational) & MongoDB (NoSQL).
+
+---
+
+## 📦 Out-of-the-Box Ready Infrastructure
+
+The following systems are pre-configured and ready to launch via Docker Compose:
+
+* ✅ **PostgreSQL 16:** Primary relational database (Product, Order, Payment).
+* ✅ **MongoDB:** Document store (Customer, Notification).
+* ✅ **Apache Kafka & Zookeeper:** Event bus configuration.
+* ✅ **Keycloak:** Auth server with auto-imported realms.
+* ✅ **Zipkin:** Tracing server.
+* ✅ **MailDev:** Email testing tool.
+* ✅ **Config Server:** Centralized configuration management.
+* ✅ **Discovery Server:** Eureka service registry.
 
 ---
 
@@ -82,30 +98,32 @@ This project uses a **mono-repo approach**:
 ### 📦 Product Service
 - Handles product catalog
 - Manages pricing and stock
-- MongoDB datastore
+- **Flyway** integration for schema migrations
+- PostgreSQL datastore
 
 ---
 
 ### 🧾 Order Service
 - Manages order creation and lifecycle
-- Communicates with:
-  - Customer Service
-  - Product Service
-  - Payment Service
+- Communicates with Customer, Product, and Payment services
 - Publishes **Order Confirmation Events** to Kafka
+- **Flyway** integration for schema migrations
+- PostgreSQL datastore
 
 ---
 
 ### 💳 Payment Service
 - Processes payment transactions
 - Publishes **Payment Confirmation Events** to Kafka
+- **Flyway** integration for schema migrations
+- PostgreSQL datastore
 
 ---
 
 ### 📧 Notification Service
-- Consumes Kafka events
-- Sends notifications (email/logs)
-- Persists notification history
+- Consumes Kafka events (Order & Payment)
+- Sends emails via SMTP
+- Persists notification history in MongoDB
 
 ---
 
@@ -128,8 +146,8 @@ This project uses a **mono-repo approach**:
 ## ⚙️ Configuration Server
 
 - Centralized external configuration management
-- Git-backed configuration repository
-- Environment-based configurations (dev, prod, etc.)
+- Git-backed configuration repository (or Native/Local)
+- Environment-based configurations (docker, dev, prod)
 
 ---
 
@@ -162,82 +180,85 @@ Benefits:
 - OAuth2 / OpenID Connect
 - Centralized authentication server
 - API Gateway enforces security policies
-- Role-based access control
+- Role-based access control (RBAC)
 
 ---
 
-## 🗄️ Databases
+## 🗄️ Databases & Migrations (Flyway)
 
-Each microservice owns its database:
+Each microservice owns its database schema to ensure loose coupling. **Flyway** is used for PostgreSQL-based services to manage database schema evolution, ensuring that the database state is always consistent with the application code.
 
-| Service        | Database |
-|---------------|----------|
-| Customer       | MongoDB |
-| Product        | PostgreSql |
-| Order          | PostgreSql |
-| Payment          | PostgreSql |
-| Notification  | MongoDB |
-
+| Service         | Database Technology | Database Name | Migration Tool |
+|-----------------|---------------------|---------------|----------------|
+| Customer        | MongoDB             | customer      | -              |
+| Product         | PostgreSQL          | product       | **Flyway** |
+| Order           | PostgreSQL          | order_db      | **Flyway** |
+| Payment         | PostgreSQL          | payment       | **Flyway** |
+| Notification    | MongoDB             | customer      | -              |
 ---
 
-## 🚀 Running the Project
+## 🚀 Quick Start (Zero-Configuration)
+
+This project is designed to be "plug-and-play" using Docker Compose.
 
 ### Prerequisites
 
-- Java 17+
+- Java 21+
 - Docker & Docker Compose
 - Maven
+- PowerShell (for setup script)
 
-### Startup Steps
+### 1. Environment Setup
+Create a `.env` file in the root directory and populate it. **Do not commit this file.**
+**Generate a strong secret:**
+* **Linux/macOS:** `openssl rand -base64 32`
+* **Windows PowerShell:** `[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))`
+```env
+KEYCLOAK_ADMIN=admin
+KEYCLOAK_ADMIN_PASSWORD=your_secure_password
+MICRO_SERVICES_API_SECRET=your_generated_base64_secret
+```
+
+### 2. Generate Keycloak Realm
+Run the helper script to inject your secret into the Keycloak configuration:
+
+```powershell
+.\scripts\generate-realms.ps1
+```
+
+### 3. Build & Run
+Build the JAR files and start the entire infrastructure (Databases, Kafka, Keycloak, and Microservices) with a single command.
 
 ```bash
-git clone https://github.com/enescelebii/microservice-e-commerce-app.git
-cd microservices-full-code
-docker-compose up -d
-```
-## ▶️ After Docker Startup
+# Build the project
+mvn clean package -DskipTests
 
-# Once Docker containers are up and running, start the Spring Boot services **in the correct order** to ensure proper service discovery and configuration loading.
-- 1️⃣ Start the Configuration Server
-- 2️⃣ Start the Eureka Discovery Server
-- 3️⃣ Start the API Gateway
-- 4️⃣ Start Core Microservices
-  - customer-service
-  - product-service
-  - order-service
-  - payment-service
-  - notification-service
+# Start Docker containers
+docker compose up -d --build
+```
+
+*Note: The `init.sql` script will automatically create the necessary PostgreSQL databases on the first run.*
+
 ---
+
 ## 🌐 Service Access URLs
 
 | Component | URL | Description |
 |----------|-----|-------------|
-| Eureka Server | http://localhost:8761 | Service discovery dashboard |
-| API Gateway | http://localhost:8222 | Single entry point for all APIs |
-| Zipkin | http://localhost:9411 | Distributed tracing UI |
-| Keycloak | http://localhost:8080 | Authentication & authorization server |
-| Kafka Broker | http://localhost:9092 | Event streaming platform |
-| MongoDB | http://localhost:27017 | Database service |
+| **API Gateway** | `http://localhost:8222` | Single entry point for all APIs |
+| **Eureka Server** | `http://localhost:8761` | Service discovery dashboard |
+| **Keycloak** | `http://localhost:9099` | Authentication & authorization server |
+| **Zipkin** | `http://localhost:9411` | Distributed tracing UI |
+| **MailDev** | `http://localhost:1080` | Email testing dashboard |
+| **Config Server** | `http://localhost:8888` | Central config management |
+| **Kafka Broker** | `localhost:9092` | Event streaming platform |
 
 ---
 
-## 🔐 Security Configuration (Keycloak)
+## 🧪 Testing the Flow
 
-The application uses **Keycloak** for authentication and authorization.
-
-### Default Setup
-- Create a **realm**
-- Create a **client** for the API Gateway
-- Enable:
-  - OAuth2
-  - OpenID Connect
-- Configure redirect URIs
-
-### Authentication Flow
-1. Client sends request to API Gateway
-2. Gateway redirects to Keycloak
-3. Access token is issued
-4. Token is validated by Gateway
-5. Request is routed to target microservice
-
----
+1.  **Get Token:** Obtain an access token from Keycloak (`http://localhost:9099`).
+2.  **Place Order:** Send a POST request to `http://localhost:8222/api/v1/orders` with the Oauth2 token.
+3.  **Verify:**
+    * Check **MailDev** (`http://localhost:1080`) for the confirmation email.
+    * Check **Zipkin** (`http://localhost:9411`) to trace the request flow.
