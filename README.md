@@ -206,7 +206,8 @@ This project is designed to be "plug-and-play" using Docker Compose.
 - Java 21+
 - Docker & Docker Compose
 - Maven
-- PowerShell (for setup script)
+- PowerShell or bash (for setup script)
+- minimum ram ammount 4gb
 
 ### 1. Environment Setup
 Create a `.env` file in the root directory and populate it. **Do not commit this file.**
@@ -236,6 +237,7 @@ mvn clean package -DskipTests
 # Start Docker containers
 docker compose up -d --build
 ```
+If any services down please rerun the container and wait
 
 *Note: The `init.sql` script will automatically create the necessary PostgreSQL databases on the first run.*
 
