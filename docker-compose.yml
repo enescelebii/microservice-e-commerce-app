@@ -184,8 +184,8 @@ services:
     depends_on:
       - config-server
       - discovery-service
-      - ms_pg_sql
-      - ms_mongo_db
+      - postgres
+      - mongodb
     networks:
       - microservices_net
 
@@ -201,8 +201,8 @@ services:
       - config-server
       - discovery-service
       - kafka
-      - ms_pg_sql
-      - ms_mongo_db
+      - postgres
+      - mongodb
     networks:
       - microservices_net
 
@@ -216,8 +216,8 @@ services:
     depends_on:
       - config-server
       - discovery-service
-      - ms_pg_sql
-      - ms_mongo_db
+      - postgres
+      - mongodb
     networks:
       - microservices_net
 
@@ -232,8 +232,8 @@ services:
       - config-server
       - discovery-service
       - kafka
-      - ms_pg_sql
-      - ms_mongo_db
+      - postgres
+      - mongodb
     networks:
       - microservices_net
 
@@ -248,8 +248,8 @@ services:
       - config-server
       - discovery-service
       - kafka
-      - ms_pg_sql
-      - ms_mongo_db
+      - postgres
+      - mongodb
     networks:
       - microservices_net
 
