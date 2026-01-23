@@ -42,3 +42,4 @@ build/
 *.pem
 # Veya klasör bazlı kesin çözüm
 src/main/resources/keys/
+/.idea
